@@ -1,7 +1,7 @@
 #!/bin/sh
 
-SOURCES=teleport.cpp
-OUTPUT=teleport
+SOURCES="Handshake.cpp ServerSession.cpp Socket.cpp teleport.cpp"
+OUTPUT="teleport"
 LIBS="-lpthread"
 CPPFLAGS="-O3 -Wall -Werror -Wno-multichar -g"
 
