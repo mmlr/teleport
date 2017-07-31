@@ -1,0 +1,3 @@
+[submodule "csrp"]
+	path = csrp
+	url = https://github.com/mmlr/csrp

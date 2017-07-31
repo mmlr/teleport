@@ -3,10 +3,13 @@
 
 #include "Socket.h"
 
+class AuthDatabase;
+
 
 class ServerSession {
 public:
-								ServerSession(Socket &socket);
+								ServerSession(Socket &socket,
+									const AuthDatabase &authDatabase);
 								~ServerSession();
 
 		int						Init();
@@ -18,6 +21,8 @@ private:
 
 		Socket &				fSocket;
 		uint16_t				fListenPort;
+
+		const AuthDatabase &	fAuthDatabase;
 };
 
 #endif // SERVER_SESSION_H

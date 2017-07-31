@@ -1,6 +1,8 @@
+#include "AutoDeleter.h"
 #include "Common.h"
 #include "ServerSession.h"
 #include "Socket.h"
+#include "Auth.h"
 #include "Thread.h"
 
 #include <signal.h>
@@ -8,8 +10,11 @@
 #include <unistd.h>
 
 
+static const char *kAuthmoduleName = "srp";
+
+
 int
-server(uint16_t port)
+server(uint16_t port, const AuthDatabase &authDatabase)
 {
 	Socket socket;
 	int result = socket.Listen(port);
@@ -21,7 +26,8 @@ server(uint16_t port)
 		if (clientSocket == NULL)
 			continue;
 
-		ServerSession *session = new(std::nothrow) ServerSession(*clientSocket);
+		ServerSession *session = new(std::nothrow) ServerSession(*clientSocket,
+			authDatabase);
 		if (session == NULL) {
 			LOG_ERROR("failed to allocate session\n");
 			continue;
@@ -35,19 +41,27 @@ server(uint16_t port)
 
 
 int
-client(const char *host, uint16_t port, uint16_t localPort, uint16_t remotePort)
+client(const char *host, uint16_t port, uint16_t localPort, uint16_t remotePort,
+	const char *username, const char *password)
 {
 	Socket socket;
 	int result = socket.Connect(host, port);
 	if (result < 0)
 		return result;
 
+	ClientAuth *auth = Auth::GetClientAuth(kAuthmoduleName, username, password);
+	if (auth == NULL) {
+		LOG_ERROR("failed to create client auth\n");
+		return -1;
+	}
+
+	AutoDeleter<ClientAuth> _(auth);
+
 	Handshake handshake;
 	handshake.header.init();
-	handshake.header.id_length = 0;
-	handshake.header.key_length = 0;
 	handshake.header.port = remotePort;
-	result = handshake.Allocate();
+
+	result = auth->StartAuthentication(handshake);
 	if (result < 0)
 		return result;
 
@@ -59,9 +73,7 @@ client(const char *host, uint16_t port, uint16_t localPort, uint16_t remotePort)
 	if (result < 0)
 		return result;
 
-	handshake.header.id_length = 0;
-	handshake.header.key_length = 0;
-	result = handshake.Allocate();
+	result = auth->ProcessChallenge(handshake);
 	if (result < 0)
 		return result;
 
@@ -70,6 +82,10 @@ client(const char *host, uint16_t port, uint16_t localPort, uint16_t remotePort)
 		return result;
 
 	result = handshake.Read(socket);
+	if (result < 0)
+		return result;
+
+	result = auth->VerifySession(handshake);
 	if (result < 0)
 		return result;
 
@@ -106,9 +122,12 @@ void
 print_usage_and_exit(const char *programName)
 {
 	printf("usage:\n");
-	printf("\t%s server <listenPort>\n", programName);
-	printf("\t%s client <host> <port> <localPort> <remotePort> [loop]\n",
+	printf("\t%s server <listenPort> <authDatabase>\n", programName);
+	printf("\t%s client <host> <port> <localPort> <remotePort> <username>\n",
 		programName);
+	printf("\t\t<password> [loop]\n");
+	printf("\t%s user add <authDatabase> <username> <password>\n", programName);
+	printf("\t%s user remove <authDatabase> <username>\n", programName);
 	exit(1);
 }
 
@@ -116,7 +135,7 @@ print_usage_and_exit(const char *programName)
 int
 main(int argc, const char *argv[])
 {
-	if (argc < 3)
+	if (argc < 4)
 		print_usage_and_exit(argv[0]);
 
 	struct sigaction action;
@@ -130,25 +149,70 @@ main(int argc, const char *argv[])
 		if (sscanf(argv[2], "%" SCNu16, &listenPort) != 1)
 			print_usage_and_exit(argv[0]);
 
-		server(listenPort);
+		AuthDatabase *authDatabase = Auth::GetAuthDatabase(kAuthmoduleName,
+			argv[3]);
+		if (authDatabase == NULL) {
+			LOG_ERROR("failed to create auth database\n");
+			return -1;
+		}
+
+		AutoDeleter<AuthDatabase> _(authDatabase);
+		return server(listenPort, *authDatabase);
 	} else if (strcmp(argv[1], "client") == 0) {
 		uint16_t connectPort;
 		uint16_t localPort;
 		uint16_t remotePort;
-		if (argc < 6 || sscanf(argv[3], "%" SCNu16, &connectPort) != 1
+		if (argc < 8 || sscanf(argv[3], "%" SCNu16, &connectPort) != 1
 			|| sscanf(argv[4], "%" SCNu16, &localPort) != 1
 			|| sscanf(argv[5], "%" SCNu16, &remotePort) != 1) {
 			print_usage_and_exit(argv[0]);
 		}
 
 		while (true) {
-			int result = client(argv[2], connectPort, localPort, remotePort);
-			if (argc <= 6 || strcmp(argv[6], "loop") != 0)
+			int result = client(argv[2], connectPort, localPort, remotePort,
+				argv[6], argv[7]);
+			if (argc <= 8 || strcmp(argv[8], "loop") != 0)
 				break;
 
 			if (result < 0)
 				sleep(1);
 		}
+	} else if (strcmp(argv[1], "user") == 0 && argc > 3) {
+		AuthDatabase *database
+			= Auth::GetAuthDatabase(kAuthmoduleName, argv[3]);
+		if (database == NULL) {
+			LOG_ERROR("failed to create auth database\n");
+			return -1;
+		}
+
+		AutoDeleter<AuthDatabase> _(database);
+
+		if (strcmp(argv[2], "add") == 0) {
+			if (argc < 6)
+				print_usage_and_exit(argv[0]);
+
+			if (database->Add(argv[4], argv[5]) < 0)
+				LOG_ERROR("failed to add user\n");
+
+		} else if (strcmp(argv[2], "remove") == 0) {
+			if (argc < 5)
+				print_usage_and_exit(argv[0]);
+
+			int result = database->Remove(argv[4]);
+			if (result < 0) {
+				LOG_ERROR("failed to remove user\n");
+				return result;
+			}
+
+		} else if (strcmp(argv[2], "list") == 0) {
+			int result = database->List();
+			if (result < 0) {
+				LOG_ERROR("failed to list users\n");
+				return result;
+			}
+
+		} else
+			print_usage_and_exit(argv[0]);
 	} else
 		print_usage_and_exit(argv[0]);
 

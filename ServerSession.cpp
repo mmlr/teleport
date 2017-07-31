@@ -1,12 +1,15 @@
 #include "ServerSession.h"
 
+#include "AutoDeleter.h"
 #include "Handshake.h"
+#include "Auth.h"
 #include "Thread.h"
 
 
-ServerSession::ServerSession(Socket &socket)
+ServerSession::ServerSession(Socket &socket, const AuthDatabase &authDatabase)
 	:
-	fSocket(socket)
+	fSocket(socket),
+	fAuthDatabase(authDatabase)
 {
 	LOG_DEBUG("server session created\n");
 }
@@ -30,9 +33,15 @@ ServerSession::Init()
 	fListenPort = handshake.header.port;
 	LOG_DEBUG("requested listen port: %" PRIu16 "\n", handshake.header.port);
 
-	handshake.header.id_length = 0;
-	handshake.header.key_length = 0;
-	result = handshake.Allocate();
+	ServerAuth *auth = fAuthDatabase.GetServerAuth();
+	if (auth == NULL) {
+		LOG_ERROR("failed to create server auth\n");
+		return -1;
+	}
+
+	AutoDeleter<ServerAuth> _(auth);
+
+	result = auth->ProduceChallenge(handshake);
 	if (result < 0)
 		return result;
 
@@ -44,9 +53,7 @@ ServerSession::Init()
 	if (result < 0)
 		return result;
 
-	handshake.header.id_length = 0;
-	handshake.header.key_length = 0;
-	result = handshake.Allocate();
+	result = auth->VerifySession(handshake);
 	if (result < 0)
 		return result;
 

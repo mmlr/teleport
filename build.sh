@@ -1,8 +1,9 @@
 #!/bin/sh
 
-SOURCES="Handshake.cpp ServerSession.cpp Socket.cpp teleport.cpp"
+SOURCES="Auth.cpp Handshake.cpp ServerSession.cpp Socket.cpp teleport.cpp"
+AUTH_SOURCES="SRPAuth.cpp csrp/srp.c"
 OUTPUT="teleport"
-LIBS="-lpthread"
+LIBS="-lpthread -lcrypto"
 CPPFLAGS="-O3 -Wall -Werror -Wno-multichar -g"
 
 case $(uname) in
@@ -17,4 +18,4 @@ then
 	CPPFLAGS="$CPPFLAGS -Wextra -pedantic -std=c++11"
 fi
 
-g++ $SOURCES -o $OUTPUT $CPPFLAGS $LIBS
+g++ $SOURCES $AUTH_SOURCES -o $OUTPUT $CPPFLAGS $LIBS
