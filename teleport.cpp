@@ -98,6 +98,9 @@ client(const char *host, uint16_t port, uint16_t localPort, uint16_t remotePort,
 		return result;
 	}
 
+	LOG_INFO("transferring incoming connection to port %" PRIu16 "\n",
+		localPort);
+
 	Socket connection;
 	result = connection.Connect("localhost", localPort);
 	if (result < 0)

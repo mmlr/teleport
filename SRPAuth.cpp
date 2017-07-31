@@ -399,7 +399,7 @@ SRPServerAuth::VerifySession(Handshake &handshake)
 	const unsigned char *proof;
 	srp_verifier_verify_session(fVerifier, handshake.id, &proof);
 	if (proof == NULL) {
-		LOG_ERROR("user authentication failed\n");
+		LOG_ERROR("user authentication failed for user \"%s\"\n", Username());
 		return -1;
 	}
 

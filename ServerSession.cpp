@@ -113,4 +113,6 @@ ServerSession::_Run()
 	fSocket.Transfer(*socket);
 	thread.Interrupt();
 	thread.Join();
+
+	LOG_INFO("servers session ended for port %" PRIu16 "\n", fListenPort);
 }
