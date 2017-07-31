@@ -1,6 +1,9 @@
 #ifndef AUTO_DELETER_H
 #define AUTO_DELETER_H
 
+#include <stdlib.h>
+
+
 template<class T>
 class AutoDeleter {
 public:
@@ -17,6 +20,24 @@ public:
 
 private:
 		T *						fObject;
+};
+
+
+class AutoFreeer {
+public:
+								AutoFreeer(void *buffer)
+									:
+									fBuffer(buffer)
+								{
+								}
+
+								~AutoFreeer()
+								{
+									free(fBuffer);
+								}
+
+private:
+		void *					fBuffer;
 };
 
 #endif // AUTO_DELETER_H

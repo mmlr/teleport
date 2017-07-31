@@ -1,5 +1,6 @@
 #include "SRPAuth.h"
 
+#include "AutoDeleter.h"
 #include "Common.h"
 #include "Socket.h"
 
@@ -352,14 +353,14 @@ SRPServerAuth::ProduceChallenge(Handshake &handshake)
 		return -1;
 	}
 
+	AutoFreeer _(username);
+
 	SRPAuthRecord record;
 	int result = fDatabase.Lookup(username, record);
-	if (result < 0)
+	if (result < 0) {
 		LOG_ERROR("user lookup failed for user \"%s\"\n", username);
-
-	free(username);
-	if (result < 0)
 		return result;
+	}
 
 	if (handshake.header.port != record.header.allowed_port) {
 		LOG_ERROR("user \"%s\" not allowed to listen on port %" PRIu16 "\n",
