@@ -89,6 +89,8 @@ client(const char *host, uint16_t port, uint16_t localPort, uint16_t remotePort,
 	if (result < 0)
 		return result;
 
+	LOG_INFO("authenticated to server \"%s\" port %" PRIu16 "\n", host, port);
+
 	uint8_t connectionMark;
 	result = socket.ReadFully(&connectionMark, sizeof(connectionMark));
 	if (result < 0) {

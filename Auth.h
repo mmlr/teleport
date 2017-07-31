@@ -32,6 +32,8 @@ virtual							~ServerAuth();
 
 virtual	int						ProduceChallenge(Handshake &handshake) = 0;
 virtual	int						VerifySession(Handshake &handshake) = 0;
+
+virtual	const char *			Username() const = 0;
 };
 
 

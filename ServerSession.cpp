@@ -62,6 +62,7 @@ ServerSession::Init()
 		return result;
 
 	LOG_DEBUG("server session init complete\n");
+	LOG_INFO("authenticated user \"%s\"\n", auth->Username());
 	return 0;
 }
 
@@ -87,8 +88,7 @@ ServerSession::_Run()
 	if (listener.Listen(fListenPort, true, 1) < 0)
 		return;
 
-	LOG_DEBUG("server session starting listening on port %" PRIu16 "\n",
-		fListenPort);
+	LOG_INFO("server session listening on port %" PRIu16 "\n", fListenPort);
 
 	Socket *socket = listener.Accept(&fSocket);
 	if (socket == NULL) {
@@ -97,7 +97,7 @@ ServerSession::_Run()
 		return;
 	}
 
-	LOG_DEBUG("server session accepted connection on port %" PRIu16 "\n",
+	LOG_INFO("server session accepted connection on port %" PRIu16 "\n",
 		fListenPort);
 
 	uint8_t connectionMark = 0;

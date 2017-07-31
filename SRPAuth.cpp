@@ -404,6 +404,13 @@ SRPServerAuth::VerifySession(Handshake &handshake)
 }
 
 
+const char *
+SRPServerAuth::Username() const
+{
+	return srp_verifier_get_username(fVerifier);
+}
+
+
 SRPClientAuth::SRPClientAuth(const char *username, const char *password)
 	:
 	ClientAuth(username, password)

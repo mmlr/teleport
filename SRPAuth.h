@@ -34,6 +34,8 @@ public:
 virtual	int						ProduceChallenge(Handshake &handshake);
 virtual	int						VerifySession(Handshake &handshake);
 
+virtual	const char *			Username() const;
+
 private:
 		const SRPAuthDatabase &	fDatabase;
 		SRPVerifier *			fVerifier;
