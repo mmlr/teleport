@@ -126,7 +126,8 @@ print_usage_and_exit(const char *programName)
 	printf("\t%s client <host> <port> <localPort> <remotePort> <username>\n",
 		programName);
 	printf("\t\t<password> [loop]\n");
-	printf("\t%s user add <authDatabase> <username> <password>\n", programName);
+	printf("\t%s user add <authDatabase> <username> <password> <allowedPort>\n",
+		programName);
 	printf("\t%s user remove <authDatabase> <username>\n", programName);
 	exit(1);
 }
@@ -188,10 +189,11 @@ main(int argc, const char *argv[])
 		AutoDeleter<AuthDatabase> _(database);
 
 		if (strcmp(argv[2], "add") == 0) {
-			if (argc < 6)
+			uint16_t allowedPort;
+			if (argc < 7 || sscanf(argv[6], "%" SCNu16, &allowedPort) != 1)
 				print_usage_and_exit(argv[0]);
 
-			if (database->Add(argv[4], argv[5]) < 0)
+			if (database->Add(argv[4], argv[5], allowedPort) < 0)
 				LOG_ERROR("failed to add user\n");
 
 		} else if (strcmp(argv[2], "remove") == 0) {

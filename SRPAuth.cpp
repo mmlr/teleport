@@ -27,6 +27,7 @@ struct srp_auth_record_header {
 	uint32_t	username_length;
 	uint32_t	salt_length;
 	uint32_t	verifier_length;
+	uint16_t	allowed_port;
 } __attribute__((__packed__));
 
 
@@ -186,7 +187,8 @@ SRPAuthDatabase::SRPAuthDatabase(const char *databaseFile)
 
 
 int
-SRPAuthDatabase::Add(const char *username, const char *password)
+SRPAuthDatabase::Add(const char *username, const char *password,
+	uint16_t allowedPort)
 {
 	int saltLength;
 	const unsigned char *salt;
@@ -203,6 +205,7 @@ SRPAuthDatabase::Add(const char *username, const char *password)
 	record.salt = (void *)salt;
 	record.header.verifier_length = verifierLength;
 	record.verifier = (void *)verifier;
+	record.header.allowed_port = allowedPort;
 
 	int fd = open(fDatabaseFile, O_CREAT | O_APPEND | O_WRONLY,
 		S_IWUSR | S_IRUSR);
@@ -303,6 +306,8 @@ SRPAuthDatabase::List() const
 		return fd;
 	}
 
+	printf("username\tallowed port\n");
+
 	Socket file(fd);
 	SRPAuthRecord record;
 	while (true) {
@@ -310,7 +315,8 @@ SRPAuthDatabase::List() const
 		if (result < 0)
 			return 0;
 
-		printf("%s\n", record.username);
+		printf("%s\t%" PRIu16 "\n", record.username,
+			record.header.allowed_port);
 	}
 }
 
@@ -354,6 +360,12 @@ SRPServerAuth::ProduceChallenge(Handshake &handshake)
 	free(username);
 	if (result < 0)
 		return result;
+
+	if (handshake.header.port != record.header.allowed_port) {
+		LOG_ERROR("user \"%s\" not allowed to listen on port %" PRIu16 "\n",
+			username, handshake.header.port);
+		return -1;
+	}
 
 	int challengeLength;
 	const unsigned char *challenge;

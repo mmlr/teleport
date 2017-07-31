@@ -12,8 +12,8 @@ public:
 								AuthDatabase(const char *databaseFile);
 virtual							~AuthDatabase();
 
-virtual	int						Add(const char *username, const char *password)
-									= 0;
+virtual	int						Add(const char *username, const char *password,
+									uint16_t allowedPort) = 0;
 virtual	int						Remove(const char *username) = 0;
 
 virtual	int						List() const = 0;

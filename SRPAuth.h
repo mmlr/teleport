@@ -13,7 +13,8 @@ class SRPAuthDatabase : public AuthDatabase {
 public:
 								SRPAuthDatabase(const char *databaseFile);
 
-virtual	int						Add(const char *username, const char *password);
+virtual	int						Add(const char *username, const char *password,
+									uint16_t allowedPort);
 virtual	int						Remove(const char *username);
 
 		int						Lookup(const char *username,
