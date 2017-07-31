@@ -75,8 +75,9 @@ Socket::Listen(uint16_t port, bool loopback, int backlog)
 	if (result < 0) {
 		LOG_ERROR("failed to set reuse address socket option on socket %d\n",
 			fSocket);
-	} else
+	} else {
 		LOG_DEBUG("reuse address socket option set on socket %d\n", fSocket);
+	}
 
 	sockaddr_in address;
 	memset(&address, 0, sizeof(address));
