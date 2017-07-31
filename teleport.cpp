@@ -131,6 +131,7 @@ print_usage_and_exit(const char *programName)
 	printf("\t%s user add <authDatabase> <username> <password> <allowedPort>\n",
 		programName);
 	printf("\t%s user remove <authDatabase> <username>\n", programName);
+	printf("\t%s user list <authDatabase>\n", programName);
 	exit(1);
 }
 
