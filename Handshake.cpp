@@ -68,9 +68,13 @@ Handshake::Copy(uint32_t idLength, const void *_id, uint32_t keyLength,
 int
 Handshake::Read(Socket &socket)
 {
-	int result = socket.ReadFully(&header, sizeof(header));
-	if (result < 0)
+	bool disconnected;
+	int result = socket.ReadFully(&header, sizeof(header), &disconnected);
+	if (result < 0) {
+		LOG_ERROR("handshake read failed: %s\n",
+			disconnected ? "disconnected" : "error");
 		return result;
+	}
 
 	if (!header.is_valid()) {
 		LOG_ERROR("handshake header invalid\n");

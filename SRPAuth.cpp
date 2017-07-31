@@ -83,9 +83,11 @@ SRPAuthRecord::Read(Socket &file)
 {
 	Free();
 
-	int result = file.ReadFully(&header, sizeof(header));
+	bool eof;
+	int result = file.ReadFully(&header, sizeof(header), &eof);
 	if (result < 0) {
-		LOG_DEBUG("failed to read auth record header\n");
+		if (!eof)
+			LOG_ERROR("failed to read auth record header\n");
 		return result;
 	}
 
