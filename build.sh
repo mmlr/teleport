@@ -4,7 +4,7 @@ SOURCES="Auth.cpp Handshake.cpp ServerSession.cpp Socket.cpp teleport.cpp"
 AUTH_SOURCES="SRPAuth.cpp csrp/srp.c"
 OUTPUT="teleport"
 LIBS="-lpthread -lcrypto"
-CPPFLAGS="-O3 -Wall -Werror -Wno-multichar -g"
+CPPFLAGS="-O3 -Wall -Werror -Wno-multichar -g -D__STDC_FORMAT_MACROS"
 
 case $(uname) in
 	Haiku)
