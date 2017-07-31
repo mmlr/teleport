@@ -21,7 +21,8 @@ public:
 		int						Connect(const char *host, uint16_t port);
 
 		ssize_t					Read(void *buffer, size_t bufferSize);
-		int						ReadFully(void *buffer, size_t bufferSize);
+		int						ReadFully(void *buffer, size_t bufferSize,
+									bool *disconnected = NULL);
 
 		ssize_t					Write(const void *buffer, size_t bufferSize);
 		int						WriteFully(const void *buffer,

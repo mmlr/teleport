@@ -186,7 +186,7 @@ Socket::Read(void *buffer, size_t bufferSize)
 
 
 int
-Socket::ReadFully(void *_buffer, size_t bufferSize)
+Socket::ReadFully(void *_buffer, size_t bufferSize, bool *disconnected)
 {
 	LOG_VERBOSE("reading socket %d into buffer %p of size %zu fully\n", fSocket,
 		_buffer, bufferSize);
@@ -195,11 +195,17 @@ Socket::ReadFully(void *_buffer, size_t bufferSize)
 	while (bufferSize > 0) {
 		ssize_t result = read(fSocket, buffer, bufferSize);
 		if (result == 0) {
+			if (disconnected != NULL)
+				*disconnected = true;
+
 			LOG_DEBUG("connection on socket %d closed\n", fSocket);
 			return -1;
 		}
 
 		if (result <= 0) {
+			if (disconnected != NULL)
+				*disconnected = false;
+
 			LOG_ERROR("read failed on socket %d: %s\n", fSocket,
 				strerror(errno));
 			return result;
