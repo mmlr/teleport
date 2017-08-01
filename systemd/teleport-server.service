@@ -1,0 +1,13 @@
+[Unit]
+Description=Teleport Server
+After=network.target
+
+[Service]
+User=teleport
+EnvironmentFile=/etc/teleport/server.conf
+ExecStart=/usr/local/bin/teleport server $LISTEN_PORT $AUTH_DATABASE
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

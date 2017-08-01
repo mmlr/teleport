@@ -1,0 +1,12 @@
+[Unit]
+Description=Teleport Client
+After=network.target
+
+[Service]
+User=teleport
+EnvironmentFile=/etc/teleport/client.conf
+ExecStart=/usr/local/bin/teleport client $CONNECT_HOST $CONNECT_PORT \
+	$LOCAL_PORT $REMOTE_PORT $USERNAME $PASSWORD $LOOP
+
+[Install]
+WantedBy=multi-user.target
