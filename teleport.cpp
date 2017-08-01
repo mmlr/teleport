@@ -175,10 +175,13 @@ main(int argc, const char *argv[])
 			print_usage_and_exit(argv[0]);
 		}
 
+		bool loop = argc > 8
+			&& (strcmp(argv[8], "loop") != 0 || strcmp(argv[8], "yes") == 0);
 		while (true) {
 			int result = client(argv[2], connectPort, localPort, remotePort,
 				argv[6], argv[7]);
-			if (argc <= 8 || strcmp(argv[8], "loop") != 0)
+
+			if (!loop)
 				break;
 
 			if (result < 0)
