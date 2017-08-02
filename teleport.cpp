@@ -176,7 +176,7 @@ main(int argc, const char *argv[])
 		}
 
 		bool loop = argc > 8
-			&& (strcmp(argv[8], "loop") != 0 || strcmp(argv[8], "yes") == 0);
+			&& (strcmp(argv[8], "loop") == 0 || strcmp(argv[8], "yes") == 0);
 		while (true) {
 			int result = client(argv[2], connectPort, localPort, remotePort,
 				argv[6], argv[7]);
