@@ -5,6 +5,8 @@
 #include "Auth.h"
 #include "Thread.h"
 
+#include <errno.h>
+
 
 ServerSession::ServerSession(Socket &socket, const AuthDatabase &authDatabase)
 	:
@@ -90,8 +92,30 @@ ServerSession::_Run()
 
 	LOG_INFO("server session listening on port %" PRIu16 "\n", fListenPort);
 
-	Socket *socket = listener.Accept(&fSocket);
-	if (socket == NULL) {
+	Socket *socket = NULL;
+	while (true) {
+		int result = listener.Accept(socket, &fSocket, KEEP_ALIVE_TIMEOUT);
+		if (socket != NULL)
+			break;
+
+		if (result == ETIMEDOUT) {
+			LOG_INFO("reached keep alive timeout, sending keep alive mark\n");
+			uint8_t keepAliveMark = CONNECTION_MARK_KEEP_ALIVE;
+			if (fSocket.WriteFully(&keepAliveMark, sizeof(keepAliveMark)) != 0)
+			{
+				LOG_ERROR("failed to send keep alive mark\n");
+				return;
+			}
+
+			continue;
+		}
+
+		if (result == ECANCELED) {
+			LOG_INFO("canceled accepting on listening port %" PRIu16
+				", other socket closed\n", fListenPort);
+			return;
+		}
+
 		LOG_ERROR("failed accepting socket on listening port %" PRIu16 "\n",
 			fListenPort);
 		return;
@@ -100,8 +124,8 @@ ServerSession::_Run()
 	LOG_INFO("server session accepted connection on port %" PRIu16 "\n",
 		fListenPort);
 
-	uint8_t connectionMark = 0;
-	if (fSocket.WriteFully(&connectionMark, sizeof(connectionMark))) {
+	uint8_t connectionMark = CONNECTION_MARK_CONNECTION;
+	if (fSocket.WriteFully(&connectionMark, sizeof(connectionMark)) != 0) {
 		LOG_ERROR("failed to write connection mark\n");
 		return;
 	}

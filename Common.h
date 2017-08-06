@@ -13,4 +13,10 @@
 #define LOG_INFO(...)		printf(__VA_ARGS__)
 #define LOG_ERROR(...)		printf(__VA_ARGS__)
 
+
+#define KEEP_ALIVE_TIMEOUT			30 * 1000
+
+#define CONNECTION_MARK_CONNECTION	0
+#define CONNECTION_MARK_KEEP_ALIVE	1
+
 #endif // COMMON_H

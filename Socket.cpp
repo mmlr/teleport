@@ -105,34 +105,38 @@ Socket::Listen(uint16_t port, bool loopback, int backlog)
 }
 
 
-Socket *
-Socket::Accept(Socket *cancelSocket)
+int
+Socket::Accept(Socket *&acceptedSocket, Socket *cancelSocket, int timeout)
 {
 	sockaddr_in address;
 	socklen_t addressLength = sizeof(address);
 
-	if (cancelSocket != NULL) {
+	if (cancelSocket != NULL || timeout >= 0) {
 		pollfd fds[2];
 		fds[0].fd = fSocket;
-		fds[1].fd = cancelSocket->fSocket;
+		fds[1].fd = cancelSocket != NULL ? cancelSocket->fSocket : 0;
 		fds[0].events = fds[1].events = POLLIN;
 		fds[0].revents = fds[1].revents = 0;
 
-		poll(fds, 2, -1);
-		if (fds[1].revents != 0) {
+		int result = poll(fds, cancelSocket != NULL ? 2 : 1, timeout);
+		if (result == 0)
+			return ETIMEDOUT;
+
+		if (cancelSocket != NULL && fds[1].revents != 0) {
 			LOG_DEBUG("cancel socket polled events: %hd\n", fds[1].revents);
-			return NULL;
+			return ECANCELED;
 		}
 	}
 
 	int socket = accept(fSocket, (sockaddr *)&address, &addressLength);
 	if (socket < 0) {
 		LOG_ERROR("accept failed: %s\n", strerror(errno));
-		return NULL;
+		return 0;
 	}
 
 	LOG_DEBUG("socket %d accepted: %d\n", fSocket, socket);
-	return new(std::nothrow) Socket(socket);
+	acceptedSocket = new(std::nothrow) Socket(socket);
+	return acceptedSocket != NULL ? 0 : ENOMEM;
 }
 
 

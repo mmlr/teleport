@@ -22,7 +22,8 @@ server(uint16_t port, const AuthDatabase &authDatabase)
 		return result;
 
 	while (true) {
-		Socket *clientSocket = socket.Accept();
+		Socket *clientSocket = NULL;
+		socket.Accept(clientSocket);
 		if (clientSocket == NULL)
 			continue;
 
@@ -91,11 +92,20 @@ client(const char *host, uint16_t port, uint16_t localPort, uint16_t remotePort,
 
 	LOG_INFO("authenticated to server \"%s\" port %" PRIu16 "\n", host, port);
 
-	uint8_t connectionMark;
-	result = socket.ReadFully(&connectionMark, sizeof(connectionMark));
-	if (result < 0) {
-		LOG_ERROR("failed to read connection mark\n");
-		return result;
+	while (true) {
+		uint8_t connectionMark;
+		result = socket.ReadFully(&connectionMark, sizeof(connectionMark));
+		if (result < 0) {
+			LOG_ERROR("failed to read connection mark\n");
+			return result;
+		}
+
+		if (connectionMark == CONNECTION_MARK_CONNECTION)
+			break;
+
+		if (connectionMark == CONNECTION_MARK_KEEP_ALIVE) {
+			LOG_INFO("keep alive mark received\n");
+		}
 	}
 
 	LOG_INFO("transferring incoming connection to port %" PRIu16 "\n",

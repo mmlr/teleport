@@ -16,7 +16,9 @@ public:
 
 		int						Listen(uint16_t port, bool loopback = false,
 									int backlog = 5);
-		Socket *				Accept(Socket *cancelSocket = NULL);
+		int						Accept(Socket *&acceptedSocket,
+									Socket *cancelSocket = NULL,
+									int timeout = -1);
 
 		int						Connect(const char *host, uint16_t port);
 
