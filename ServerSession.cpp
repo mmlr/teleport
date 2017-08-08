@@ -138,5 +138,5 @@ ServerSession::_Run()
 	thread.Interrupt();
 	thread.Join();
 
-	LOG_INFO("servers session ended for port %" PRIu16 "\n", fListenPort);
+	LOG_INFO("server session ended for port %" PRIu16 "\n", fListenPort);
 }
