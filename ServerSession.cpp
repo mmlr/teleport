@@ -99,7 +99,8 @@ ServerSession::_Run()
 			break;
 
 		if (result == ETIMEDOUT) {
-			LOG_INFO("reached keep alive timeout, sending keep alive mark\n");
+			LOG_INFO("keep alive timeout for port %" PRIu16
+				", sending keep alive mark\n", fListenPort);
 			uint8_t keepAliveMark = CONNECTION_MARK_KEEP_ALIVE;
 			if (fSocket.WriteFully(&keepAliveMark, sizeof(keepAliveMark)) != 0)
 			{
