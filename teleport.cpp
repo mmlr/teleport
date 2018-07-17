@@ -161,6 +161,10 @@ main(int argc, const char *argv[])
 	sigaction(SIGUSR1, &action, NULL);
 	sigaction(SIGPIPE, &action, NULL);
 
+	action.sa_handler = &exit;
+	sigaction(SIGINT, &action, NULL);
+	sigaction(SIGTERM, &action, NULL);
+
 	if (strcmp(argv[1], "server") == 0) {
 		uint16_t listenPort;
 		if (sscanf(argv[2], "%" SCNu16, &listenPort) != 1)
