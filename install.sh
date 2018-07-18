@@ -21,7 +21,6 @@ case $(uname) in
 	*)
 		BIN_DIR=/usr/local/bin
 		echo "installing $BINARY to $BIN_DIR"
-		install --owner=root --group=root --target-directory "$BIN_DIR" -D \
-			"$BINARY"
+		install -o root -g root -t "$BIN_DIR" -D "$BINARY"
 	;;
 esac
